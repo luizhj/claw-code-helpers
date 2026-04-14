@@ -1,0 +1,40 @@
+# imagem rust oficial
+FROM rust:bookworm
+
+# atualiza programas
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        git \
+        libssl-dev \
+        pkg-config \
+		sudo \
+		vim \
+    && rm -rf /var/lib/apt/lists/*
+
+# cria pasta e baixa o projeto git
+RUN mkdir -p /claw \
+	&& git clone --depth 1 --branch main \
+	https://github.com/ultraworkers/claw-code.git /claw
+
+# vai pra pasta do projeto
+WORKDIR /claw/rust 
+# compila o projeto git
+RUN cargo build --workspace
+
+# define variaveis de ambiente
+ENV ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic"
+ENV ANTHROPIC_MODEL="deepseek-chat"
+ENV ANTHROPIC_DEFAULT_HAIKU_MODEL="deepseek-chat"
+ENV API_TIMEOUT_MS=600000
+ENV CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+# variavel de ambiente com a chave de api para conexao
+#ENV ANTHROPIC_API_KEY=
+
+# chamar 'claw' de qualquer pasta Criar link simbólico em /usr/local/bin (já está no PATH)
+RUN ln -s /claw/rust/target/debug/claw /usr/local/bin/claw
+
+# pasta com o projeto do protheus vinculada no docker run -v /caminholocal/:/protheus 
+WORKDIR /protheus/
+
+CMD ["bash"]
